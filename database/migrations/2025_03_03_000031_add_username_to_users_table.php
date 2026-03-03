@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('username', 100)->nullable()->unique()->after('name');
+        });
+
+        // Backfill username from email for existing users
+        \DB::table('users')->whereNotNull('email')->update([
+            'username' => \DB::raw('email'),
+        ]);
+    }
+
+    public function down(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('username');
+        });
+    }
+};
