@@ -23,8 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ForceJsonResponse::class,
         ]);
 
-        $middleware->statefulApi();
-
         $middleware->alias([
             'super_admin'     => \App\Http\Middleware\SuperAdminMiddleware::class,
             'org_admin'       => \App\Http\Middleware\OrganizationAdminMiddleware::class,
