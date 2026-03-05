@@ -8,6 +8,50 @@ RESTful API for the Billing Application. All protected endpoints require **JWT B
 
 ---
 
+## Quick Start - Complete Authentication Flow
+
+### Step 1: Login to get JWT Token
+
+```bash
+curl -X 'POST' \
+  'https://testbillapi.eazycutz.com/api/v1/auth/login' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "demo3",
+  "password": "password"
+}'
+```
+
+**Response:**
+
+```json
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "bearer",
+    "expires_in": 3600
+}
+```
+
+### Step 2: Use Token in Protected Endpoints
+
+Copy the `access_token` and add it to ALL subsequent requests:
+
+```bash
+curl -X 'GET' \
+  'https://testbillapi.eazycutz.com/api/v1/auth/me' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Key Points:**
+
+- Token expires in 3600 seconds (1 hour)
+- Always include `Authorization: Bearer {token}` header
+- If you get 401 Unauthorized, token may be expired → login again
+- Never put `JWT_SECRET` in requests - it's only for the server
+
+---
+
 ## Authentication (JWT)
 
 ### ⚠️ IMPORTANT
@@ -79,6 +123,30 @@ Authorization: Bearer {token}
 ```http
 GET /api/v1/auth/me
 Authorization: Bearer {token}
+```
+
+### Validate Token (Debug Endpoint)
+
+Use this to check if your token is valid and correctly formatted:
+
+```http
+POST /api/v1/auth/validate-token
+Authorization: Bearer {token}
+```
+
+**This endpoint will:**
+
+- ✅ Confirm if your token is valid
+- ❌ Show errors if token is missing or invalid
+- 🔍 Detect if you accidentally sent `JWT_SECRET` instead of token
+- ⏰ Show token expiration time
+
+**Curl example:**
+
+```bash
+curl -X 'POST' \
+  'https://testbillapi.eazycutz.com/api/v1/auth/validate-token' \
+  -H 'Authorization: Bearer YOUR_TOKEN_HERE'
 ```
 
 ### Dashboard Summary (PDF: Total Sales, Paid, Unpaid, Cancelled)

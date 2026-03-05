@@ -116,6 +116,79 @@ class AuthController extends Controller
     }
 
     /**
+     * Validate token format and structure (public endpoint for debugging).
+     *
+     * @OA\Post(
+     *     path="/auth/validate-token",
+     *     tags={"Authentication"},
+     *     summary="Validate Token Format",
+     *     description="Debug endpoint: Check if your token has the correct format. Send: Authorization: Bearer YOUR_TOKEN_HERE",
+     *     @OA\Response(response=200, description="Valid token", @OA\JsonContent(
+     *         @OA\Property(property="valid", type="boolean", example=true),
+     *         @OA\Property(property="message", type="string", example="Token is valid"),
+     *         @OA\Property(property="expires_in_seconds", type="integer")
+     *     )),
+     *     @OA\Response(response=400, description="Invalid or missing token", @OA\JsonContent(
+     *         @OA\Property(property="valid", type="boolean", example=false),
+     *         @OA\Property(property="message", type="string", example="Token is missing or invalid"),
+     *         @OA\Property(property="error", type="string")
+     *     )),
+     *     security={}
+     * )
+     */
+    public function validateToken(Request $request): JsonResponse
+    {
+        try {
+            $token = $request->bearerToken();
+
+            if (! $token) {
+                return response()->json([
+                    'valid'            => false,
+                    'message'          => 'Authorization header missing',
+                    'error'            => 'Add header: Authorization: Bearer YOUR_TOKEN_HERE',
+                    'received_headers' => [
+                        'Authorization' => $request->header('Authorization') ?: 'NOT SENT',
+                    ],
+                ], 400);
+            }
+
+            if (strpos($token, 'JWT_SECRET=') !== false) {
+                return response()->json([
+                    'valid'   => false,
+                    'message' => 'Invalid token format detected',
+                    'error'   => '❌ You sent JWT_SECRET instead of actual token',
+                    'fix'     => '1. POST /auth/login with credentials 2. Copy access_token from response 3. Send: Authorization: Bearer {access_token}',
+                ], 400);
+            }
+
+            // Try to authenticate with token
+            if (auth('api')->setToken($token)->check()) {
+                $user = auth('api')->user();
+                return response()->json([
+                    'valid'              => true,
+                    'message'            => 'Token is valid',
+                    'user_id'            => $user->id,
+                    'expires_in_seconds' => auth('api')->factory()->getTTL() * 60,
+                ]);
+            } else {
+                return response()->json([
+                    'valid'   => false,
+                    'message' => 'Token authentication failed',
+                    'error'   => 'Token is invalid or expired',
+                    'fix'     => 'Login again with /auth/login to get a fresh token',
+                ], 400);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'valid'   => false,
+                'message' => 'Token validation error',
+                'error'   => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    /**
      * Get authenticated user profile.
      *
      * @OA\Get(

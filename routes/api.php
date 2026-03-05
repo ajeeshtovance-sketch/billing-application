@@ -8,9 +8,9 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DeliveryChallanController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\OrganizationController;
+use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
-use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\UserController;
@@ -29,6 +29,7 @@ Route::prefix('v1')->group(function () {
     // Public routes
     Route::post('auth/login', [AuthController::class, 'login']);
     Route::post('auth/register', [AuthController::class, 'register']);
+    Route::post('auth/validate-token', [AuthController::class, 'validateToken']); // Debug endpoint
 
     // Protected routes - require JWT
     Route::middleware('auth:api')->group(function () {
