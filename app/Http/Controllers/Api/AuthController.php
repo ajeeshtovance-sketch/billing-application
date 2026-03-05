@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -22,7 +21,7 @@ class AuthController extends Controller
      *     path="/auth/login",
      *     tags={"Authentication"},
      *     summary="User Login",
-     *     description="Authenticate with username or email and password. Returns JWT token.",
+     *     description="Authenticate with username or email and password. Returns JWT token. ⚠️ Copy the access_token and use it as: Authorization: Bearer {access_token}",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -31,10 +30,10 @@ class AuthController extends Controller
      *             @OA\Property(property="password", type="string", description="User password", example="password")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Success", @OA\JsonContent(
-     *         @OA\Property(property="access_token", type="string"),
+     *     @OA\Response(response=200, description="Success - Copy access_token for authorization", @OA\JsonContent(
+     *         @OA\Property(property="access_token", type="string", description="JWT token - use in Authorization: Bearer header"),
      *         @OA\Property(property="token_type", type="string", example="bearer"),
-     *         @OA\Property(property="expires_in", type="integer")
+     *         @OA\Property(property="expires_in", type="integer", description="Token expiration time in seconds")
      *     )),
      *     @OA\Response(response=422, description="Validation Error"),
      *     security={}
@@ -48,7 +47,7 @@ class AuthController extends Controller
         ]);
 
         $login = $request->username;
-        $user = User::where('email', $login)->orWhere('username', $login)->first();
+        $user  = User::where('email', $login)->orWhere('username', $login)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
@@ -64,24 +63,24 @@ class AuthController extends Controller
     public function register(Request $request): JsonResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'name'              => ['required', 'string', 'max:255'],
+            'email'             => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password'          => ['required', 'confirmed', Password::defaults()],
             'organization_name' => ['required', 'string', 'max:255'],
         ]);
 
         $organization = Organization::create([
-            'name' => $request->organization_name,
+            'name'          => $request->organization_name,
             'base_currency' => $request->input('base_currency', 'INR'),
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name'            => $request->name,
+            'email'           => $request->email,
+            'password'        => Hash::make($request->password),
             'organization_id' => $organization->id,
-            'role' => 'admin',
-            'status' => 'active',
+            'role'            => 'admin',
+            'status'          => 'active',
         ]);
 
         $token = auth('api')->login($user);
@@ -147,15 +146,15 @@ class AuthController extends Controller
 
     public function dashboardSummary(Request $request): JsonResponse
     {
-        $user = auth('api')->user();
+        $user           = auth('api')->user();
         $organizationId = $user->organization_id;
 
         if (! $organizationId) {
             return response()->json([
                 'total_sales' => 0,
-                'paid' => 0,
-                'unpaid' => 0,
-                'cancelled' => 0,
+                'paid'        => 0,
+                'unpaid'      => 0,
+                'cancelled'   => 0,
             ]);
         }
 
@@ -181,16 +180,16 @@ class AuthController extends Controller
         $invoices = $query->get();
 
         $totalSales = $invoices->whereNotIn('status', ['cancelled'])->sum('total');
-        $paid = $invoices->where('status', 'paid')->sum('amount_paid');
-        $unpaid = $invoices->whereIn('status', ['sent', 'unpaid', 'partial'])->sum('balance_due');
-        $cancelled = $invoices->where('status', 'cancelled')->sum('total');
+        $paid       = $invoices->where('status', 'paid')->sum('amount_paid');
+        $unpaid     = $invoices->whereIn('status', ['sent', 'unpaid', 'partial'])->sum('balance_due');
+        $cancelled  = $invoices->where('status', 'cancelled')->sum('total');
 
         return response()->json([
             'total_sales' => round($totalSales, 2),
-            'paid' => round($paid, 2),
-            'unpaid' => round($unpaid, 2),
-            'cancelled' => round($cancelled, 2),
-            'period' => $period,
+            'paid'        => round($paid, 2),
+            'unpaid'      => round($unpaid, 2),
+            'cancelled'   => round($cancelled, 2),
+            'period'      => $period,
         ]);
     }
 
@@ -201,8 +200,8 @@ class AuthController extends Controller
     {
         return response()->json([
             'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'token_type'   => 'bearer',
+            'expires_in'   => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 }

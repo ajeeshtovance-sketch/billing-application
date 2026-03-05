@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
  * @OA\Info(
  *     title="Billing App API",
  *     version="1.0",
- *     description="Billing Application API - JWT Secured. Use `/api/v1/auth/login` to get a token, then add header: `Authorization: Bearer {token}`"
+ *     description="Billing Application API - JWT Secured. Use `/api/v1/auth/login` to get a token, then add header: `Authorization: Bearer {token}`. ⚠️ IMPORTANT: Never send JWT_SECRET in requests. Always use actual token from login response."
  * )
  *
  * @OA\Server(

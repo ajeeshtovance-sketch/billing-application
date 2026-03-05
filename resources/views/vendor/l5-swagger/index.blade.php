@@ -141,6 +141,25 @@
         window.onload = function() {
             const urls = [];
 
+            // Clear incorrect stored tokens (e.g., JWT_SECRET format)
+            (function() {
+                try {
+                    const authKey = 'swagger_auth.bearerAuth.value';
+                    const stored = localStorage.getItem(authKey);
+
+                    // Clear if token contains JWT_SECRET= or is invalid format
+                    if (stored && (stored.includes('JWT_SECRET=') || !stored.startsWith('eyJ'))) {
+                        localStorage.removeItem(authKey);
+                        localStorage.removeItem('Swagger-ui-B-clientAuthorizations');
+                        localStorage.removeItem('swagger_auth');
+                        console.log(
+                            '⚠️ Cleared invalid token format. Please login again using /auth/login endpoint.');
+                    }
+                } catch (e) {
+                    console.log('Token validation error:', e);
+                }
+            })();
+
             @foreach ($urlsToDocs as $title => $url)
                 urls.push({
                     name: "{{ $title }}",
@@ -160,6 +179,18 @@
 
                 requestInterceptor: function(request) {
                     request.headers['X-CSRF-TOKEN'] = '{{ csrf_token() }}';
+
+                    // Validate JWT token format
+                    const authHeader = request.headers['Authorization'];
+                    if (authHeader && authHeader.includes('JWT_SECRET=')) {
+                        console.error(
+                            '❌ Invalid token format! JWT_SECRET should never be sent in requests.');
+                        console.log('📝 Steps to fix:');
+                        console.log('1. POST to /api/v1/auth/login with username and password');
+                        console.log('2. Copy the access_token from response');
+                        console.log('3. Click Authorize → Enter: Bearer <your_token>');
+                        delete request.headers['Authorization'];
+                    }
                     return request;
                 },
 
