@@ -23,11 +23,6 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ForceJsonResponse::class,
         ]);
 
-        // Add JWT middleware explicitly
-        $middleware->api(append: [
-            \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
-        ]);
-
         $middleware->alias([
             'super_admin'     => \App\Http\Middleware\SuperAdminMiddleware::class,
             'org_admin'       => \App\Http\Middleware\OrganizationAdminMiddleware::class,

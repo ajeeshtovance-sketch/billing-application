@@ -26,10 +26,10 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function () {
-    // Public routes
-    Route::post('auth/login', [AuthController::class, 'login']);
-    Route::post('auth/register', [AuthController::class, 'register']);
-    Route::post('auth/validate-token', [AuthController::class, 'validateToken']); // Debug endpoint
+    // Public routes (must NEVER require JWT)
+    Route::post('auth/login', [AuthController::class, 'login'])->withoutMiddleware('auth:api');
+    Route::post('auth/register', [AuthController::class, 'register'])->withoutMiddleware('auth:api');
+    Route::post('auth/validate-token', [AuthController::class, 'validateToken'])->withoutMiddleware('auth:api'); // Debug endpoint
 
     // Protected routes - require JWT
     Route::middleware('auth:api')->group(function () {
