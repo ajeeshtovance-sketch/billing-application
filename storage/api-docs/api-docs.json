@@ -11,6 +11,10 @@
             "description": "API Server (localhost)"
         },
         {
+            "url": "https://testbillapi.eazycutz.com/api/v1",
+            "description": "API Server (Live)"
+        },
+        {
             "url": "/api/v1",
             "description": "API Server (relative)"
         }

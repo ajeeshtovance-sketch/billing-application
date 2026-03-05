@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 /**
@@ -12,6 +11,11 @@ namespace App\Http\Controllers;
  * @OA\Server(
  *     url="http://127.0.0.1:8000/api/v1",
  *     description="API Server (localhost)"
+ * )
+ *
+ * @OA\Server(
+ *     url="https://testbillapi.eazycutz.com/api/v1",
+ *     description="API Server (Live)"
  * )
  *
  * @OA\Server(
