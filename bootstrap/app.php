@@ -23,6 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ForceJsonResponse::class,
         ]);
 
+        // Add JWT middleware explicitly
+        $middleware->api(append: [
+            \Tymon\JWTAuth\Http\Middleware\Authenticate::class,
+        ]);
+
         $middleware->alias([
             'super_admin'     => \App\Http\Middleware\SuperAdminMiddleware::class,
             'org_admin'       => \App\Http\Middleware\OrganizationAdminMiddleware::class,
@@ -37,9 +42,33 @@ return Application::configure(basePath: dirname(__DIR__))
             return $request->is('api/*');
         });
 
+        // Handle JWT token exceptions
+        $exceptions->render(function (\Tymon\JWTAuth\Exceptions\JWTException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Token is invalid or expired',
+                    'error'   => $e->getMessage(),
+                ], 401);
+            }
+        });
+
+        // Handle token not provided
+        $exceptions->render(function (\Tymon\JWTAuth\Exceptions\TokenBlacklistedException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Token has been blacklisted',
+                    'error'   => $e->getMessage(),
+                ], 401);
+            }
+        });
+
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
-                return response()->json(['message' => 'Unauthenticated.'], 401);
+                return response()->json([
+                    'message' => 'Unauthenticated - Missing or invalid Bearer token',
+                    'error'   => 'Please provide a valid JWT token in Authorization header: Bearer YOUR_TOKEN',
+                    'hint'    => 'Call POST /api/v1/auth/login first to get a token',
+                ], 401);
             }
         });
 

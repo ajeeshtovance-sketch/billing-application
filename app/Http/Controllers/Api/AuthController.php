@@ -145,10 +145,11 @@ class AuthController extends Controller
                 return response()->json([
                     'valid'            => false,
                     'message'          => 'Authorization header missing',
-                    'error'            => 'Add header: Authorization: Bearer YOUR_TOKEN_HERE',
+                    'error'            => 'Add Authorization header: Bearer YOUR_TOKEN_HERE',
                     'received_headers' => [
                         'Authorization' => $request->header('Authorization') ?: 'NOT SENT',
                     ],
+                    'fix'              => '1. POST to /api/v1/auth/login with username and password\n2. Copy the access_token from response\n3. Add header: Authorization: Bearer {token}',
                 ], 400);
             }
 
@@ -157,26 +158,54 @@ class AuthController extends Controller
                     'valid'   => false,
                     'message' => 'Invalid token format detected',
                     'error'   => '❌ You sent JWT_SECRET instead of actual token',
-                    'fix'     => '1. POST /auth/login with credentials 2. Copy access_token from response 3. Send: Authorization: Bearer {access_token}',
+                    'fix'     => '1. POST /api/v1/auth/login with credentials\n2. Copy access_token from response\n3. Send: Authorization: Bearer {access_token}',
                 ], 400);
             }
 
-            // Try to authenticate with token
-            if (auth('api')->setToken($token)->check()) {
-                $user = auth('api')->user();
+            // Parse and validate JWT token
+            try {
+                $jwtToken = auth('api')->setToken($token);
+
+                if (! $jwtToken->check()) {
+                    return response()->json([
+                        'valid'   => false,
+                        'message' => 'Token validation failed',
+                        'error'   => 'Token is invalid, expired, or malformed',
+                        'fix'     => 'Login again with POST /api/v1/auth/login to get a fresh token',
+                    ], 401);
+                }
+
+                $user = $jwtToken->user();
                 return response()->json([
                     'valid'              => true,
-                    'message'            => 'Token is valid',
+                    'message'            => '✅ Token is valid',
                     'user_id'            => $user->id,
+                    'user_name'          => $user->name,
+                    'user_email'         => $user->email,
                     'expires_in_seconds' => auth('api')->factory()->getTTL() * 60,
+                    'expires_in_minutes' => auth('api')->factory()->getTTL(),
                 ]);
-            } else {
+            } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
                 return response()->json([
                     'valid'   => false,
-                    'message' => 'Token authentication failed',
-                    'error'   => 'Token is invalid or expired',
-                    'fix'     => 'Login again with /auth/login to get a fresh token',
-                ], 400);
+                    'message' => 'Token has expired',
+                    'error'   => $e->getMessage(),
+                    'fix'     => 'Login again with POST /api/v1/auth/login to get a fresh token',
+                ], 401);
+            } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+                return response()->json([
+                    'valid'   => false,
+                    'message' => 'Token is invalid',
+                    'error'   => $e->getMessage(),
+                    'fix'     => 'Verify your token format and ensure it starts with eyJ',
+                ], 401);
+            } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+                return response()->json([
+                    'valid'   => false,
+                    'message' => 'JWT error',
+                    'error'   => $e->getMessage(),
+                    'fix'     => 'Ensure JWT_SECRET is properly configured in .env',
+                ], 401);
             }
 
         } catch (\Exception $e) {
@@ -184,7 +213,8 @@ class AuthController extends Controller
                 'valid'   => false,
                 'message' => 'Token validation error',
                 'error'   => $e->getMessage(),
-            ], 400);
+                'trace'   => config('app.debug') ? $e->getTraceAsString() : null,
+            ], 500);
         }
     }
 
