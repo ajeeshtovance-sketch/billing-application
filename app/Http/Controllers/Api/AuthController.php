@@ -21,7 +21,7 @@ class AuthController extends Controller
      *     path="/auth/login",
      *     tags={"Authentication"},
      *     summary="User Login",
-     *     description="Authenticate with username or email and password. Returns JWT token. ⚠️ Copy the access_token and use it as: Authorization: Bearer {access_token}",
+     *     description="Authenticate with username or email and password. Returns JWT token. ⚠️ After a successful login, copy ONLY the `access_token` value from the response and use it as: Authorization: Bearer {access_token}. Do NOT send the JWT_SECRET from .env as a token.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -122,7 +122,7 @@ class AuthController extends Controller
      *     path="/auth/validate-token",
      *     tags={"Authentication"},
      *     summary="Validate Token Format",
-     *     description="Debug endpoint: Check if your token has the correct format. Send: Authorization: Bearer YOUR_TOKEN_HERE",
+     *     description="Debug endpoint: Check if your token has the correct format. Send: Authorization: Bearer YOUR_TOKEN_HERE. If you accidentally send JWT_SECRET from .env, this endpoint will tell you and explain how to fix it.",
      *     @OA\Response(response=200, description="Valid token", @OA\JsonContent(
      *         @OA\Property(property="valid", type="boolean", example=true),
      *         @OA\Property(property="message", type="string", example="Token is valid"),
