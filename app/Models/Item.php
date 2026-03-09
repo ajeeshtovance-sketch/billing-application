@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Item extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'organization_id',
         'category_id',
@@ -14,6 +16,7 @@ class Item extends Model
         'sku',
         'barcode',
         'item_type',
+        'product_type',
         'description',
         'price',
         'cost',

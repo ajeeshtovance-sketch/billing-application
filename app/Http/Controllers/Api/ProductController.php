@@ -215,6 +215,7 @@ class ProductController extends Controller
             'tax_rate' => ['nullable', 'numeric', 'min:0'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'item_type' => ['nullable', 'string', 'in:product,service'],
+            'product_type' => ['nullable', 'string', 'in:solar_panel,inverter,battery,mounting_kit,cable,junction_box,service'],
         ]);
 
         $validated['organization_id'] = $orgId;
@@ -290,6 +291,7 @@ class ProductController extends Controller
             'tax_rate' => ['nullable', 'numeric', 'min:0'],
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'item_type' => ['nullable', 'string', 'in:product,service'],
+            'product_type' => ['nullable', 'string', 'in:solar_panel,inverter,battery,mounting_kit,cable,junction_box,service'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
         ]);
 

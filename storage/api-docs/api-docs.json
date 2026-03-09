@@ -1,9 +1,9 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Billing App API",
-        "description": "Billing Application API - JWT Secured. Use `/api/v1/auth/login` to get a token, then add header: `Authorization: Bearer {token}`",
-        "version": "1.0"
+        "title": "Billing & Solar ERP API",
+        "description": "Billing + Cloud Solar Panel Installation & Service Management API. Workflow: Lead → Survey → Quotation → Installation → Service & AMC. Roles: MD Super Admin, Branch Manager, Branch Admin, Sales Executive, Site Survey Engineer, Installation Manager/Technician, Service Team, Accounts. JWT Secured: use POST /api/v1/auth/login then header Authorization: Bearer {access_token}. AI-friendly: structured JSON responses, clear field names, dashboard metrics.",
+        "version": "2.0"
     },
     "servers": [
         {
@@ -20,13 +20,220 @@
         }
     ],
     "paths": {
+        "/solar/amc-contracts": {
+            "get": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "List AMC Contracts",
+                "description": "List AMC contracts.",
+                "operationId": "51478e40c172ceaf633c6a18d053f258",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "expired",
+                                "renewed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "Create AMC Contract",
+                "description": "Create AMC contract (after installation).",
+                "operationId": "70f51779fd20b716d872ab63c6eae810",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "installation_id",
+                                    "start_date",
+                                    "end_date",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "installation_id": {
+                                        "type": "integer"
+                                    },
+                                    "customer_id": {
+                                        "type": "integer"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/amc-contracts/{id}": {
+            "get": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "Get AMC Contract",
+                "description": "Get AMC contract.",
+                "operationId": "9c359255d46f558b7c8a315852147694",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "Update AMC Contract",
+                "description": "Update AMC contract.",
+                "operationId": "620da14d247d96646d85463aa44f7826",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "amount": {
+                                        "type": "number"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "expired",
+                                            "renewed"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/auth/login": {
             "post": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "User Login",
-                "description": "Authenticate with username or email and password. Returns JWT token.",
+                "description": "Authenticate with username or email and password. Returns JWT token. Use for all logins: organization users (admin, subadmin, manager, user, viewer) and Super Admin (same endpoint; use Super Admin credentials to get a token with role super_admin). ⚠️ Copy ONLY the `access_token` from the response for Authorization: Bearer {access_token}. Do NOT use JWT_SECRET from .env.",
                 "operationId": "99d66635c4992aeaa6aa44ff653d0563",
                 "requestBody": {
                     "required": true,
@@ -47,6 +254,85 @@
                                         "description": "User password",
                                         "type": "string",
                                         "example": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success - Copy access_token for authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "description": "JWT token - use in Authorization: Bearer header",
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "description": "Token expiration time in seconds",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": []
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register",
+                "description": "Create a new organization and admin user. Returns JWT token.",
+                "operationId": "08136088c4862c313b35d6518bab8d3a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "organization_name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    },
+                                    "organization_name": {
+                                        "type": "string"
+                                    },
+                                    "base_currency": {
+                                        "type": "string",
+                                        "example": "INR"
                                     }
                                 },
                                 "type": "object"
@@ -120,13 +406,114 @@
                 ]
             }
         },
+        "/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Refresh Token",
+                "description": "Get a new access token using current valid token.",
+                "operationId": "e7ab7446393758bb71fd1946a349e500",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/validate-token": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Validate Token Format",
+                "description": "Debug endpoint: Check if your token has the correct format. Send: Authorization: Bearer YOUR_TOKEN_HERE. If you accidentally send JWT_SECRET from .env, this endpoint will tell you and explain how to fix it.",
+                "operationId": "9bd6cf2c2c1c3647340287cdc8a8db80",
+                "responses": {
+                    "200": {
+                        "description": "Valid token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "valid": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token is valid"
+                                        },
+                                        "expires_in_seconds": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or missing token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "valid": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Token is missing or invalid"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
+            }
+        },
         "/auth/me": {
             "get": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "User Profile",
-                "description": "Get the authenticated user's profile. Requires Bearer token.",
+                "description": "Get the authenticated user's profile. Requires Bearer token obtained from POST /api/v1/auth/login. ⚠️ Use ONLY the `access_token` returned by the login response as the Bearer token (e.g. Authorization: Bearer {access_token}). Do NOT use the JWT_SECRET from .env.\\n\\nExample curl:\\n\\ncurl --location 'http://127.0.0.1:8000/api/v1/auth/me' \\\\\\n  --header 'accept: application/json' \\\\\\n  --header 'Authorization: Bearer {access_token}'",
                 "operationId": "7edae2cdbaafc10dff8c9c4198b320a2",
                 "responses": {
                     "200": {
@@ -162,6 +549,129 @@
                                         "organization": {
                                             "description": "Organization details when applicable",
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/permissions": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "My Permissions & Menus",
+                "description": "Returns the authenticated user's permissions and enabled menu modules. Use this to show/hide menus based on role. Super admin gets all permissions.",
+                "operationId": "85fc95050f1144272f3e91faf4333153",
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "permissions": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "slug": {
+                                                        "type": "string"
+                                                    },
+                                                    "module": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "menus": {
+                                            "description": "Unique module names the user can access (for showing enabled menus)",
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/dashboard/summary": {
+            "get": {
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Dashboard Summary",
+                "description": "Total sales, paid, unpaid, cancelled for organization by period (today, week, month, year).",
+                "operationId": "a62628c39d5e4b5bf19e50c7ed7ed9d4",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "month",
+                            "enum": [
+                                "today",
+                                "week",
+                                "month",
+                                "year"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_sales": {
+                                            "type": "number"
+                                        },
+                                        "paid": {
+                                            "type": "number"
+                                        },
+                                        "unpaid": {
+                                            "type": "number"
+                                        },
+                                        "cancelled": {
+                                            "type": "number"
+                                        },
+                                        "period": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -1985,6 +2495,636 @@
                 ]
             }
         },
+        "/solar/leads": {
+            "get": {
+                "tags": [
+                    "Solar - Leads"
+                ],
+                "summary": "List Leads",
+                "description": "CRM lead list. Pipeline: new → contacted → site_survey → proposal → negotiation → confirmed → installation → closed_lost",
+                "operationId": "de6e71aea4c1b0431b631f7cd2220f0c",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Customer name, phone",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "new",
+                                "contacted",
+                                "site_survey",
+                                "proposal",
+                                "negotiation",
+                                "confirmed",
+                                "installation",
+                                "closed_lost"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lead_source",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "website",
+                                "facebook_ads",
+                                "google_ads",
+                                "whatsapp",
+                                "referral",
+                                "walk_in",
+                                "phone"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "assigned_to",
+                        "in": "query",
+                        "description": "Sales executive user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "organization_id",
+                        "in": "query",
+                        "description": "Branch (MD Super Admin only)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Solar - Leads"
+                ],
+                "summary": "Create Lead",
+                "description": "Create lead. Branch Admin / Receptionist / Sales.",
+                "operationId": "395e8944bea7c0741349e19e4cdd781d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_name",
+                                    "phone"
+                                ],
+                                "properties": {
+                                    "customer_name": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "object"
+                                    },
+                                    "electricity_bill_amount": {
+                                        "type": "number"
+                                    },
+                                    "location_gps": {
+                                        "type": "string"
+                                    },
+                                    "roof_type": {
+                                        "type": "string"
+                                    },
+                                    "lead_source": {
+                                        "type": "string",
+                                        "enum": [
+                                            "website",
+                                            "facebook_ads",
+                                            "google_ads",
+                                            "whatsapp",
+                                            "referral",
+                                            "walk_in",
+                                            "phone"
+                                        ]
+                                    },
+                                    "assigned_to": {
+                                        "description": "Sales executive user ID",
+                                        "type": "integer"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/leads/{id}": {
+            "get": {
+                "tags": [
+                    "Solar - Leads"
+                ],
+                "summary": "Get Lead",
+                "description": "Get single lead.",
+                "operationId": "11203f7723713ba99fd37792b851f821",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Solar - Leads"
+                ],
+                "summary": "Update Lead",
+                "description": "Update lead (status, assign, follow-up).",
+                "operationId": "94c3e1da667b235478bf2a5c1edea8d3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "customer_name": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "object"
+                                    },
+                                    "electricity_bill_amount": {
+                                        "type": "number"
+                                    },
+                                    "roof_type": {
+                                        "type": "string"
+                                    },
+                                    "lead_source": {
+                                        "type": "string"
+                                    },
+                                    "assigned_to": {
+                                        "type": "integer"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "follow_up_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Solar - Leads"
+                ],
+                "summary": "Delete Lead",
+                "description": "Delete lead.",
+                "operationId": "1dc509cbf9912f1961d63045dc7f0c86",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/super-admin/organizations": {
+            "get": {
+                "tags": [
+                    "Super Admin - Organizations"
+                ],
+                "summary": "List Organizations",
+                "description": "List all organizations (Super Admin only).",
+                "operationId": "719579622b03760fe4e98534e3df5cfd",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "suspended",
+                                "trial"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Super Admin - Organizations"
+                ],
+                "summary": "Create Organization",
+                "description": "Create organization (Super Admin only).",
+                "operationId": "c908382ed794f07caadf9a2bd75aa1ef",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "legal_name": {
+                                        "type": "string"
+                                    },
+                                    "base_currency": {
+                                        "type": "string",
+                                        "example": "INR"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "trial"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/super-admin/organizations/{id}": {
+            "get": {
+                "tags": [
+                    "Super Admin - Organizations"
+                ],
+                "summary": "Get Organization",
+                "description": "Show organization (Super Admin only).",
+                "operationId": "a52f7fbe3eaf25afc373191b82a2b76a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Super Admin - Organizations"
+                ],
+                "summary": "Update Organization",
+                "description": "Update organization (Super Admin only).",
+                "operationId": "28852dc232df548df9a4edd9d27c6e29",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "legal_name": {
+                                        "type": "string"
+                                    },
+                                    "base_currency": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "suspended",
+                                            "trial"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Super Admin - Organizations"
+                ],
+                "summary": "Delete Organization",
+                "description": "Delete organization (Super Admin only).",
+                "operationId": "8abb14a92c1c46d553cceecd0a8cfdbd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/super-admin/permissions": {
+            "get": {
+                "tags": [
+                    "Super Admin - Permissions"
+                ],
+                "summary": "List Permissions",
+                "description": "List all permissions. Use for role-based access: assign permission_ids to roles; users get menus based on their role's permissions (see GET /auth/permissions).",
+                "operationId": "040d3f63a11300ba590f44173a93d035",
+                "parameters": [
+                    {
+                        "name": "module",
+                        "in": "query",
+                        "description": "Filter by module (e.g. invoices, customers, users)",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "grouped",
+                        "in": "query",
+                        "description": "If true, return permissions grouped by module",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "slug": {
+                                                "type": "string"
+                                            },
+                                            "module": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "description": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Super Admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/products": {
             "get": {
                 "tags": [
@@ -2704,54 +3844,1864 @@
                     }
                 ]
             }
+        },
+        "/super-admin/roles": {
+            "get": {
+                "tags": [
+                    "Super Admin - Roles"
+                ],
+                "summary": "List Roles",
+                "description": "List all roles with user count and permission count. Super Admin only.",
+                "operationId": "9592b132132de159172a47febf5edb46",
+                "parameters": [
+                    {
+                        "name": "exclude_super_admin",
+                        "in": "query",
+                        "description": "Exclude super_admin role from list",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            },
+                                            "slug": {
+                                                "type": "string"
+                                            },
+                                            "users_count": {
+                                                "type": "integer"
+                                            },
+                                            "permissions_count": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Super Admin only"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Super Admin - Roles"
+                ],
+                "summary": "Create Role",
+                "description": "Create a new role (Super Admin only). Assign permissions via permission_ids.",
+                "operationId": "80e7cd971b6f4dd48784f4123494007b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "slug"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Sales Manager"
+                                    },
+                                    "slug": {
+                                        "type": "string",
+                                        "example": "sales_manager"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "permission_ids": {
+                                        "description": "IDs of permissions to assign",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/super-admin/roles/{id}": {
+            "get": {
+                "tags": [
+                    "Super Admin - Roles"
+                ],
+                "summary": "Get Role",
+                "description": "Get a single role with its permissions (Super Admin only).",
+                "operationId": "0eecbf1a2caa4faf20c223617bf331d4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Super Admin - Roles"
+                ],
+                "summary": "Update Role",
+                "description": "Update a role and/or its permissions (Super Admin only). System roles have restricted edits.",
+                "operationId": "7cc8dafb2746b4c1a4031d0df9e77dff",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "slug": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "permission_ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Super Admin - Roles"
+                ],
+                "summary": "Delete Role",
+                "description": "Delete a role (Super Admin only). Fails if role is system or has users assigned.",
+                "operationId": "b99f234e7195b1ff3dd69623915aa5f2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Cannot delete role with users"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/service-tickets": {
+            "get": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "List Service Tickets",
+                "description": "List service tickets.",
+                "operationId": "469ed32a478d9d0a4d17250c1ba870bb",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "open",
+                                "assigned",
+                                "in_progress",
+                                "resolved",
+                                "closed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "Create Service Ticket",
+                "description": "Create service ticket (Customer complaint / AMC).",
+                "operationId": "8ef151a2b1ac4055e5328732ec6f78a9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "complaint"
+                                ],
+                                "properties": {
+                                    "installation_id": {
+                                        "type": "integer"
+                                    },
+                                    "customer_id": {
+                                        "type": "integer"
+                                    },
+                                    "complaint": {
+                                        "type": "string"
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/service-tickets/{id}": {
+            "get": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "Get Service Ticket",
+                "description": "Get service ticket.",
+                "operationId": "ea923e2343042c1e9be1f4240f981dda",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Solar - Service & AMC"
+                ],
+                "summary": "Update Service Ticket",
+                "description": "Update ticket (assign, resolve).",
+                "operationId": "634320511126f59bf9fcc163e9ae031d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "assigned_to": {
+                                        "type": "integer"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "open",
+                                            "assigned",
+                                            "in_progress",
+                                            "resolved",
+                                            "closed"
+                                        ]
+                                    },
+                                    "resolution": {
+                                        "type": "string"
+                                    },
+                                    "scheduled_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/dashboard": {
+            "get": {
+                "tags": [
+                    "Solar - Dashboard"
+                ],
+                "summary": "Solar Dashboard Metrics",
+                "description": "Total leads, installations, revenue branch-wise, pending installations, technician productivity, AMC renewals, sales conversion. AI-friendly summary.",
+                "operationId": "f33e81bb6207ff0f65abd2165109b384",
+                "parameters": [
+                    {
+                        "name": "organization_id",
+                        "in": "query",
+                        "description": "Branch (MD Super Admin only)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "description": "T=Today, W=Week, M=Month, Y=Year",
+                        "schema": {
+                            "type": "string",
+                            "default": "M",
+                            "enum": [
+                                "T",
+                                "W",
+                                "M",
+                                "Y"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_leads": {
+                                            "type": "integer"
+                                        },
+                                        "leads_today": {
+                                            "type": "integer"
+                                        },
+                                        "total_installations": {
+                                            "type": "integer"
+                                        },
+                                        "pending_installations": {
+                                            "type": "integer"
+                                        },
+                                        "completed_installations": {
+                                            "type": "integer"
+                                        },
+                                        "revenue_branch_wise": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "service_tickets_pending": {
+                                            "type": "integer"
+                                        },
+                                        "amc_renewals_due": {
+                                            "type": "integer"
+                                        },
+                                        "conversion_rate": {
+                                            "type": "number"
+                                        },
+                                        "period": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/installations": {
+            "get": {
+                "tags": [
+                    "Solar - Installations"
+                ],
+                "summary": "List Installations",
+                "description": "List installations (Installation Manager / Branch Manager).",
+                "operationId": "58f163353df018af2279ba048818759a",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "scheduled",
+                                "material_dispatched",
+                                "in_progress",
+                                "quality_check",
+                                "completed",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Solar - Installations"
+                ],
+                "summary": "Create Installation",
+                "description": "Create installation (after quotation approved).",
+                "operationId": "d627f70ee7c2f30a864c86bc5ee4d523",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "organization_id"
+                                ],
+                                "properties": {
+                                    "lead_id": {
+                                        "type": "integer"
+                                    },
+                                    "quotation_id": {
+                                        "type": "integer"
+                                    },
+                                    "customer_id": {
+                                        "type": "integer"
+                                    },
+                                    "installation_manager_id": {
+                                        "type": "integer"
+                                    },
+                                    "scheduled_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/installations/{id}": {
+            "get": {
+                "tags": [
+                    "Solar - Installations"
+                ],
+                "summary": "Get Installation",
+                "description": "Get installation with checklist and technicians.",
+                "operationId": "5c150e135893a26bc9406a9d094a39d8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Solar - Installations"
+                ],
+                "summary": "Update Installation",
+                "description": "Update installation (schedule, status).",
+                "operationId": "5d2e67f6ae5a72b3f98beacc43a7d98e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "scheduled_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "scheduled",
+                                            "material_dispatched",
+                                            "in_progress",
+                                            "quality_check",
+                                            "completed",
+                                            "cancelled"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/installations/{id}/assign": {
+            "post": {
+                "tags": [
+                    "Solar - Installations"
+                ],
+                "summary": "Assign Technicians",
+                "description": "Assign technicians to installation.",
+                "operationId": "13e88386d47a2f9e3388039ee051571f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "user_ids": {
+                                        "description": "Technician user IDs",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/installations/{id}/checklist/{checklist_id}": {
+            "patch": {
+                "tags": [
+                    "Solar - Installations"
+                ],
+                "summary": "Update Checklist Task",
+                "description": "Mark checklist task complete (Technician).",
+                "operationId": "6d71c8fd0d1dbff0c92e4e0e908189a0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "checklist_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "completed": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/super-admin/dashboard": {
+            "get": {
+                "tags": [
+                    "Super Admin"
+                ],
+                "summary": "Super Admin Dashboard",
+                "description": "Super Admin Dashboard - SaaS-wide stats.",
+                "operationId": "7983f0b6f94430d4fad8d13eda3cf6fa",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "default": "month",
+                            "enum": [
+                                "today",
+                                "week",
+                                "month",
+                                "year"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "total_organizations": {
+                                            "type": "integer"
+                                        },
+                                        "active_organizations": {
+                                            "type": "integer"
+                                        },
+                                        "total_users": {
+                                            "type": "integer"
+                                        },
+                                        "total_sales": {
+                                            "type": "number"
+                                        },
+                                        "paid": {
+                                            "type": "number"
+                                        },
+                                        "unpaid": {
+                                            "type": "number"
+                                        },
+                                        "period": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/super-admin/login-as/{user}": {
+            "post": {
+                "tags": [
+                    "Super Admin"
+                ],
+                "summary": "Login As User (Impersonate)",
+                "description": "Super admin obtains a JWT token for the target user (by user ID) to access their organization. Use the returned access_token as Bearer for subsequent requests as that user.",
+                "operationId": "d196d95edcd19c2f4dde0f790eb94a43",
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "description": "Target user ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer"
+                                        },
+                                        "impersonating": {
+                                            "description": "Target user info",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/surveys": {
+            "get": {
+                "tags": [
+                    "Solar - Site Survey"
+                ],
+                "summary": "List Surveys",
+                "description": "List surveys (by lead or branch).",
+                "operationId": "d499e4777b6249b712cb2e1e4269d1d3",
+                "parameters": [
+                    {
+                        "name": "lead_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "pending",
+                                "in_progress",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Solar - Site Survey"
+                ],
+                "summary": "Create Survey",
+                "description": "Create survey for a lead (Site Survey Engineer / Branch Manager).",
+                "operationId": "9b4dae04f53e811704253ec9026404ac",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "lead_id"
+                                ],
+                                "properties": {
+                                    "lead_id": {
+                                        "type": "integer"
+                                    },
+                                    "engineer_id": {
+                                        "type": "integer"
+                                    },
+                                    "roof_type": {
+                                        "type": "string"
+                                    },
+                                    "roof_size_sqft": {
+                                        "type": "number"
+                                    },
+                                    "shadow_analysis": {
+                                        "type": "string"
+                                    },
+                                    "direction": {
+                                        "type": "string"
+                                    },
+                                    "inverter_capacity_recommendation": {
+                                        "type": "string"
+                                    },
+                                    "system_size_kw": {
+                                        "type": "number"
+                                    },
+                                    "load_analysis": {
+                                        "type": "string"
+                                    },
+                                    "electrical_connection_notes": {
+                                        "type": "string"
+                                    },
+                                    "report_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/surveys/{id}": {
+            "get": {
+                "tags": [
+                    "Solar - Site Survey"
+                ],
+                "summary": "Get Survey",
+                "description": "Get survey.",
+                "operationId": "51bb847406d555fd106a6561fbbf9a85",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Solar - Site Survey"
+                ],
+                "summary": "Update Survey",
+                "description": "Update survey (e.g. complete with report).",
+                "operationId": "183612ee311bf1996b99838283770fe5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "roof_type": {
+                                        "type": "string"
+                                    },
+                                    "roof_size_sqft": {
+                                        "type": "number"
+                                    },
+                                    "system_size_kw": {
+                                        "type": "number"
+                                    },
+                                    "report_url": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "in_progress",
+                                            "completed"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "List Users",
+                "description": "List users. Super Admin: all org users. Org Admin: users in their org only.",
+                "operationId": "3933ad00462a4f6b0cd0f7b9158089bc",
+                "parameters": [
+                    {
+                        "name": "organization_id",
+                        "in": "query",
+                        "description": "Filter by org (super_admin only)",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "admin",
+                                "manager",
+                                "user",
+                                "viewer"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "active",
+                                "inactive"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "Create User",
+                "description": "Create user. Super Admin: can assign org. Org Admin: adds to their org.",
+                "operationId": "21b0dd137a5355f3d6194d3d16d38ee1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "role"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "manager",
+                                            "user",
+                                            "viewer"
+                                        ]
+                                    },
+                                    "organization_id": {
+                                        "description": "Required for super_admin",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/users/{id}": {
+            "get": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "Get User",
+                "description": "Show user.",
+                "operationId": "cd9fcd268ea984830217bf77b76d1c74",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "Update User",
+                "description": "Update user.",
+                "operationId": "d8a55697a62f900b50b21569a9d91261",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "manager",
+                                            "user",
+                                            "viewer"
+                                        ]
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string"
+                                    },
+                                    "organization_id": {
+                                        "description": "Super admin only",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Admin - Users"
+                ],
+                "summary": "Delete User",
+                "description": "Delete user.",
+                "operationId": "67ae947fefac424a03386135c89084c8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/vendors": {
+            "get": {
+                "tags": [
+                    "Solar - Vendors"
+                ],
+                "summary": "List Vendors",
+                "description": "List vendors (branch or all for MD Super Admin).",
+                "operationId": "2b81257a9bcd07d2de0bf016db5533db",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "default": 15
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Solar - Vendors"
+                ],
+                "summary": "Create Vendor",
+                "description": "Create vendor (MD Super Admin / Branch).",
+                "operationId": "88b8f1ee7e11127c0be0affa2925fc84",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "contact_person": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "object"
+                                    },
+                                    "gstin": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation Error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/solar/vendors/{id}": {
+            "get": {
+                "tags": [
+                    "Solar - Vendors"
+                ],
+                "summary": "Get Vendor",
+                "description": "Get vendor.",
+                "operationId": "a120ce1c68e9ef162928948d9040b8e4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Solar - Vendors"
+                ],
+                "summary": "Update Vendor",
+                "description": "Update vendor.",
+                "operationId": "1ca797d0c74b24b028f073f5d5a381c6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "contact_person": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "address": {
+                                        "type": "object"
+                                    },
+                                    "gstin": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string"
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Solar - Vendors"
+                ],
+                "summary": "Delete Vendor",
+                "description": "Delete vendor.",
+                "operationId": "894fe626baca1f997436eab3506138f8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",
-                "description": "Enter your JWT token",
-                "bearerFormat": "JWT",
-                "scheme": "bearer"
+                "description": "JWT Authorization header using the Bearer scheme. Example: \\\"Authorization: Bearer {token}\\\"",
+                "name": "Authorization",
+                "in": "header",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
             }
         }
     },
     "tags": [
         {
             "name": "Authentication",
-            "description": "Authentication"
-        },
-        {
-            "name": "CTA",
-            "description": "CTA"
-        },
-        {
-            "name": "Sales - Credit Notes",
-            "description": "Sales - Credit Notes"
-        },
-        {
-            "name": "Customers",
-            "description": "Customers"
+            "description": "Login, register, logout, refresh, profile, permissions"
         },
         {
             "name": "Dashboard",
-            "description": "Dashboard"
+            "description": "Org dashboard: summary, net profit, received amount, income-expense, low stock, payment chart, CTA"
         },
         {
-            "name": "Sales - Delivery Challans",
-            "description": "Sales - Delivery Challans"
+            "name": "CTA",
+            "description": "Quick actions: New Bill"
         },
         {
-            "name": "Sales - Invoices",
-            "description": "Sales - Invoices"
+            "name": "Customers",
+            "description": "Customer CRUD, summary, invoices"
         },
         {
             "name": "Products",
-            "description": "Products"
+            "description": "Products/items CRUD, summary, stock"
+        },
+        {
+            "name": "Sales - Invoices",
+            "description": "Invoice list, summary, create/update/cancel"
         },
         {
             "name": "Sales - Quotations",
-            "description": "Sales - Quotations"
+            "description": "Quotations, convert to invoice"
+        },
+        {
+            "name": "Sales - Delivery Challans",
+            "description": "Delivery challans, mark delivered, convert to invoice"
+        },
+        {
+            "name": "Sales - Credit Notes",
+            "description": "Credit notes, mark refund"
+        },
+        {
+            "name": "Super Admin",
+            "description": "MD Super Admin: dashboard, login-as"
+        },
+        {
+            "name": "Super Admin - Organizations",
+            "description": "Branches CRUD (Super Admin only)"
+        },
+        {
+            "name": "Super Admin - Roles",
+            "description": "Roles CRUD, assign permissions (Super Admin only)"
+        },
+        {
+            "name": "Super Admin - Permissions",
+            "description": "List permissions (Super Admin only)"
+        },
+        {
+            "name": "Admin - Users",
+            "description": "Sub-users / org users CRUD"
+        },
+        {
+            "name": "Solar - Dashboard",
+            "description": "Solar ERP metrics: leads, installations, revenue, AMC"
+        },
+        {
+            "name": "Solar - Leads",
+            "description": "CRM leads, pipeline, assign"
+        },
+        {
+            "name": "Solar - Site Survey",
+            "description": "Site surveys, report, system size"
+        },
+        {
+            "name": "Solar - Installations",
+            "description": "Installations, assign technicians, checklist"
+        },
+        {
+            "name": "Solar - Service & AMC",
+            "description": "Service tickets, AMC contracts"
+        },
+        {
+            "name": "Solar - Vendors",
+            "description": "Vendor management"
         }
     ],
     "security": [

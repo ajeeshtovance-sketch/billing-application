@@ -5,16 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Invoice extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'organization_id',
         'invoice_number',
         'customer_id',
         'quotation_id',
         'delivery_challan_id',
+        'installation_id',
         'invoice_type',
+        'payment_mode',
         'status',
         'issue_date',
         'due_date',
@@ -68,5 +72,10 @@ class Invoice extends Model
     public function deliveryChallan(): BelongsTo
     {
         return $this->belongsTo(DeliveryChallan::class);
+    }
+
+    public function installation(): BelongsTo
+    {
+        return $this->belongsTo(Installation::class);
     }
 }

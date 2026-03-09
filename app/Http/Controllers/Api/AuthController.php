@@ -21,7 +21,7 @@ class AuthController extends Controller
      *     path="/auth/login",
      *     tags={"Authentication"},
      *     summary="User Login",
-     *     description="Authenticate with username or email and password. Returns JWT token. ⚠️ After a successful login, copy ONLY the `access_token` value from the response and use it as: Authorization: Bearer {access_token}. Do NOT send the JWT_SECRET from .env as a token.",
+     *     description="Authenticate with username or email and password. Returns JWT token. Use for all logins: organization users (admin, subadmin, manager, user, viewer) and Super Admin (same endpoint; use Super Admin credentials to get a token with role super_admin). ⚠️ Copy ONLY the `access_token` from the response for Authorization: Bearer {access_token}. Do NOT use JWT_SECRET from .env.",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -60,6 +60,32 @@ class AuthController extends Controller
         return $this->respondWithToken($token);
     }
 
+    /**
+     * Register new organization and admin user (public).
+     *
+     * @OA\Post(
+     *     path="/auth/register",
+     *     tags={"Authentication"},
+     *     summary="Register",
+     *     description="Create a new organization and admin user. Returns JWT token.",
+     *     @OA\RequestBody(required=true, @OA\JsonContent(
+     *         required={"name","email","password","password_confirmation","organization_name"},
+     *         @OA\Property(property="name", type="string"),
+     *         @OA\Property(property="email", type="string", format="email"),
+     *         @OA\Property(property="password", type="string"),
+     *         @OA\Property(property="password_confirmation", type="string"),
+     *         @OA\Property(property="organization_name", type="string"),
+     *         @OA\Property(property="base_currency", type="string", example="INR")
+     *     )),
+     *     @OA\Response(response=200, description="Success", @OA\JsonContent(
+     *         @OA\Property(property="access_token", type="string"),
+     *         @OA\Property(property="token_type", type="string", example="bearer"),
+     *         @OA\Property(property="expires_in", type="integer")
+     *     )),
+     *     @OA\Response(response=422, description="Validation Error"),
+     *     security={}
+     * )
+     */
     public function register(Request $request): JsonResponse
     {
         $request->validate([
@@ -110,6 +136,23 @@ class AuthController extends Controller
         return response()->json(['message' => 'Successfully logged out']);
     }
 
+    /**
+     * Refresh JWT token.
+     *
+     * @OA\Post(
+     *     path="/auth/refresh",
+     *     tags={"Authentication"},
+     *     summary="Refresh Token",
+     *     description="Get a new access token using current valid token.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Success", @OA\JsonContent(
+     *         @OA\Property(property="access_token", type="string"),
+     *         @OA\Property(property="token_type", type="string", example="bearer"),
+     *         @OA\Property(property="expires_in", type="integer")
+     *     )),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function refresh(): JsonResponse
     {
         return $this->respondWithToken(auth('api')->refresh());
@@ -225,7 +268,7 @@ class AuthController extends Controller
      *     path="/auth/me",
      *     tags={"Authentication"},
      *     summary="User Profile",
-     *     description="Get the authenticated user's profile. Requires Bearer token.",
+     *     description="Get the authenticated user's profile. Requires Bearer token obtained from POST /api/v1/auth/login. ⚠️ Use ONLY the `access_token` returned by the login response as the Bearer token (e.g. Authorization: Bearer {access_token}). Do NOT use the JWT_SECRET from .env.\n\nExample curl:\n\ncurl --location 'http://127.0.0.1:8000/api/v1/auth/me' \\\n  --header 'accept: application/json' \\\n  --header 'Authorization: Bearer {access_token}'",
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(response=200, description="Success", @OA\JsonContent(
      *         @OA\Property(property="id", type="integer", example=1),
@@ -247,6 +290,75 @@ class AuthController extends Controller
         return response()->json($user);
     }
 
+    /**
+     * Get current user's permissions and enabled menus (by module). Use for role-based UI: show only menus the user has permission to access.
+     *
+     * @OA\Get(
+     *     path="/auth/permissions",
+     *     tags={"Authentication"},
+     *     summary="My Permissions & Menus",
+     *     description="Returns the authenticated user's permissions and enabled menu modules. Use this to show/hide menus based on role. Super admin gets all permissions.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Success", @OA\JsonContent(
+     *         @OA\Property(property="permissions", type="array", @OA\Items(type="object",
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="slug", type="string"),
+     *             @OA\Property(property="module", type="string", nullable=true)
+     *         )),
+     *         @OA\Property(property="menus", type="array", @OA\Items(type="string"), description="Unique module names the user can access (for showing enabled menus)")
+     *     )),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function permissions(): JsonResponse
+    {
+        $user = auth('api')->user();
+
+        if ($user->role === 'super_admin') {
+            $permissions = \App\Models\Permission::orderBy('module')->orderBy('name')->get(['id', 'name', 'slug', 'module']);
+            $menus = $permissions->pluck('module')->unique()->filter()->values()->toArray();
+            return response()->json([
+                'permissions' => $permissions,
+                'menus' => array_values($menus),
+            ]);
+        }
+
+        $role = $user->roleModel;
+        if (! $role) {
+            return response()->json(['permissions' => [], 'menus' => []]);
+        }
+
+        $role->load('permissions:id,name,slug,module');
+        $permissions = $role->permissions;
+        $menus = $permissions->pluck('module')->unique()->filter()->values()->toArray();
+
+        return response()->json([
+            'permissions' => $permissions,
+            'menus' => array_values($menus),
+        ]);
+    }
+
+    /**
+     * Dashboard summary (sales, paid, unpaid, cancelled for period).
+     *
+     * @OA\Get(
+     *     path="/dashboard/summary",
+     *     tags={"Dashboard"},
+     *     summary="Dashboard Summary",
+     *     description="Total sales, paid, unpaid, cancelled for organization by period (today, week, month, year).",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="period", in="query", @OA\Schema(type="string", enum={"today","week","month","year"}, default="month")),
+     *     @OA\Response(response=200, description="Success", @OA\JsonContent(
+     *         @OA\Property(property="total_sales", type="number"),
+     *         @OA\Property(property="paid", type="number"),
+     *         @OA\Property(property="unpaid", type="number"),
+     *         @OA\Property(property="cancelled", type="number"),
+     *         @OA\Property(property="period", type="string")
+     *     )),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function dashboardSummary(Request $request): JsonResponse
     {
         $user           = auth('api')->user();

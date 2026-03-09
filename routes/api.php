@@ -11,9 +11,16 @@ use App\Http\Controllers\Api\OrganizationController;
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\QuotationController;
+use App\Http\Controllers\Api\AmcContractController;
+use App\Http\Controllers\Api\LeadController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\ServiceTicketController;
+use App\Http\Controllers\Api\SolarDashboardController;
+use App\Http\Controllers\Api\SolarInstallationController;
+use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\SuperAdminController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\VendorController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,6 +43,7 @@ Route::prefix('v1')->group(function () {
         Route::post('auth/logout', [AuthController::class, 'logout']);
         Route::post('auth/refresh', [AuthController::class, 'refresh']);
         Route::get('auth/me', [AuthController::class, 'me']);
+        Route::get('auth/permissions', [AuthController::class, 'permissions']);
 
         // Dashboard (org users)
         Route::get('dashboard/summary', [AuthController::class, 'dashboardSummary']);
@@ -89,6 +97,22 @@ Route::prefix('v1')->group(function () {
         // Admin - Sub-user management (super_admin + org admin)
         Route::middleware('org_admin')->prefix('admin')->group(function () {
             Route::apiResource('users', UserController::class);
+        });
+
+        // Solar ERP - Lead → Survey → Quotation → Installation → Service & AMC
+        Route::prefix('solar')->group(function () {
+            Route::get('dashboard', [SolarDashboardController::class, 'index']);
+            Route::apiResource('leads', LeadController::class)->parameters(['lead' => 'id']);
+            Route::apiResource('surveys', SurveyController::class)->only(['index', 'store', 'show', 'update'])->parameters(['survey' => 'id']);
+            Route::get('installations', [SolarInstallationController::class, 'index']);
+            Route::post('installations', [SolarInstallationController::class, 'store']);
+            Route::get('installations/{id}', [SolarInstallationController::class, 'show']);
+            Route::put('installations/{id}', [SolarInstallationController::class, 'update']);
+            Route::post('installations/{id}/assign', [SolarInstallationController::class, 'assign']);
+            Route::patch('installations/{id}/checklist/{checklist_id}', [SolarInstallationController::class, 'updateChecklist']);
+            Route::apiResource('service-tickets', ServiceTicketController::class)->only(['index', 'store', 'show', 'update'])->parameters(['service_ticket' => 'id']);
+            Route::apiResource('amc-contracts', AmcContractController::class)->only(['index', 'store', 'show', 'update'])->parameters(['amc_contract' => 'id']);
+            Route::apiResource('vendors', VendorController::class)->parameters(['vendor' => 'id']);
         });
     });
 });

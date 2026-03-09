@@ -5,7 +5,7 @@ return [
     'documentations' => [
         'default' => [
             'api' => [
-                'title' => 'Billing App API Documentation',
+                'title' => 'Billing & Solar ERP API Documentation',
             ],
 
             'routes' => [
@@ -160,13 +160,7 @@ return [
              * @note This option overwrites `paths.excludes`
              * @see \OpenApi\scan
              */
-            'exclude' => [
-                base_path('app/Http/Controllers/Api/OrganizationController.php'),
-                base_path('app/Http/Controllers/Api/UserController.php'),
-                base_path('app/Http/Controllers/Api/SuperAdminController.php'),
-                base_path('app/Http/Controllers/Api/PermissionController.php'),
-                base_path('app/Http/Controllers/Api/RoleController.php'),
-            ],
+            'exclude' => [],
 
             /*
              * Allows to generate specs either for OpenAPI 3.0.0 or OpenAPI 3.1.0.
@@ -227,7 +221,7 @@ return [
          * 'method' (sort by HTTP method).
          * Default is the order returned by the server unchanged.
          */
-        'operations_sort' => env('L5_SWAGGER_OPERATIONS_SORT', null),
+        'operations_sort' => env('L5_SWAGGER_OPERATIONS_SORT', 'alpha'),
 
         /*
          * Pass the validatorUrl parameter to SwaggerUi init on the JS side.

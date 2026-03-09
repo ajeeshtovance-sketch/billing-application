@@ -5,13 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Quotation extends Model
 {
+    use SoftDeletes;
     protected $fillable = [
         'organization_id',
         'quotation_number',
         'customer_id',
+        'lead_id',
+        'survey_id',
         'status',
         'valid_until',
         'subtotal',
@@ -40,6 +44,16 @@ class Quotation extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function lead(): BelongsTo
+    {
+        return $this->belongsTo(Lead::class);
+    }
+
+    public function survey(): BelongsTo
+    {
+        return $this->belongsTo(Survey::class);
     }
 
     public function invoice(): BelongsTo

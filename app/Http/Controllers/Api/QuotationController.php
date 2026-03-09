@@ -142,6 +142,8 @@ class QuotationController extends Controller
 
         $validated = $request->validate([
             'customer_id' => ['required', 'integer', 'exists:customers,id'],
+            'lead_id' => ['nullable', 'integer', 'exists:leads,id'],
+            'survey_id' => ['nullable', 'integer', 'exists:surveys,id'],
             'valid_until' => ['nullable', 'date'],
             'notes' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
@@ -159,6 +161,8 @@ class QuotationController extends Controller
             'organization_id' => $orgId,
             'quotation_number' => $quotationNumber,
             'customer_id' => $customer->id,
+            'lead_id' => $validated['lead_id'] ?? null,
+            'survey_id' => $validated['survey_id'] ?? null,
             'status' => 'draft',
             'valid_until' => $validated['valid_until'] ?? null,
             'subtotal' => 0,

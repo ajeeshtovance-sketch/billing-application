@@ -75,15 +75,15 @@ class SuperAdminController extends Controller
     }
 
     /**
-     * Login as sub-admin (impersonate). Super admin gets a JWT for the target user.
+     * Login as another user (impersonate). Super Admin only. Returns a JWT for the target user.
      *
      * @OA\Post(
-     *     path="/super-admin/login-as/{user_id}",
+     *     path="/super-admin/login-as/{user}",
      *     tags={"Super Admin"},
-     *     summary="Login as Sub-Admin",
-     *     description="Super admin obtains a JWT token for the target user to access their organization view",
+     *     summary="Login As User (Impersonate)",
+     *     description="Super admin obtains a JWT token for the target user (by user ID) to access their organization. Use the returned access_token as Bearer for subsequent requests as that user.",
      *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="user_id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="user", in="path", required=true, description="Target user ID", @OA\Schema(type="integer")),
      *     @OA\Response(response=200, description="Success", @OA\JsonContent(
      *         @OA\Property(property="access_token", type="string"),
      *         @OA\Property(property="token_type", type="string", example="bearer"),
