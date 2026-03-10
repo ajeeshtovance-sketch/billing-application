@@ -255,7 +255,7 @@ class SuperAdminWebController extends Controller
 
         if ($request->filled('admin_email')) {
             $rules['admin_name'] = ['required', 'string', 'max:255'];
-            $rules['admin_email'] = ['required', 'string', 'email', 'max:255', 'unique:users'];
+            $rules['admin_email'] = ['required', 'string', 'email', 'max:255', 'unique:users,email'];
             $rules['admin_password'] = ['required', 'confirmed', Password::defaults()];
             $rules['admin_role'] = ['required', 'string', 'in:admin,subadmin,manager,user,viewer'];
         }
